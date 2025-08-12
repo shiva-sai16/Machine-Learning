@@ -1,0 +1,90 @@
+import pandas as pd
+import numpy as np
+import re
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestRegressor
+
+# --- Part 1: Data Processing and Model Training ---
+
+# Load and clean the dataset
+data = pd.read_csv(r"C:\Users\Shiva sAI\OneDrive\Documents\ML\CARSELLINGPRICE.csv")
+
+# Clean numerical columns
+data['price'] = data['price'].replace({'\$': '', ',': ''}, regex=True).astype(float)
+data['milage'] = data['milage'].replace({',': '', ' mi.': ''}, regex=True).astype(float)
+
+# Function to extract horsepower from the 'engine' string
+def extract_horsepower(engine_str):
+    if isinstance(engine_str, str):
+        hp_match = re.search(r'(\d+\.?\d*)\s*HP', engine_str)
+        if hp_match:
+            return float(hp_match.group(1))
+    return np.nan
+
+data['horsepower'] = data['engine'].apply(extract_horsepower)
+data['horsepower'].fillna(data['horsepower'].median(), inplace=True)
+
+# Drop rows with missing essential data
+data.dropna(subset=['price', 'milage', 'model_year'], inplace=True)
+
+# Apply one-hot encoding to categorical features
+categorical_features = ['fuel_type', 'transmission', 'accident']
+data = pd.get_dummies(data, columns=categorical_features, drop_first=True, dummy_na=True)
+
+# Define features (X) and target (y)
+features = ['model_year', 'milage', 'horsepower'] + [col for col in data.columns if any(cat_feat in col for cat_feat in categorical_features)]
+X = data[features]
+y = data['price']
+
+# Split data and train the model
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+model = RandomForestRegressor(n_estimators=100, random_state=42, n_jobs=-1)
+model.fit(X_train, y_train)
+
+print("--- Car Price Prediction Model Ready ---")
+
+# --- Part 2: User Input and Prediction ---
+
+try:
+    # Get user input
+    print("\nPlease enter the car details:")
+    model_year = int(input("Model Year (e.g., 2018): "))
+    milage = float(input("Milage (in miles, e.g., 50000): "))
+    horsepower = float(input("Engine Horsepower (HP, e.g., 180): "))
+    fuel_type = input("Fuel Type (e.g., Gasoline, Diesel, E85): ")
+    transmission = input("Transmission (e.g., Automatic, Manual): ")
+    accident = input("Accident History (e.g., 'None reported', 'At least 1 accident'): ")
+
+    # Create a DataFrame from user input
+    user_data = {
+        'model_year': [model_year],
+        'milage': [milage],
+        'horsepower': [horsepower],
+        'fuel_type': [fuel_type],
+        'transmission': [transmission],
+        'accident': [accident]
+    }
+    input_df = pd.DataFrame(user_data)
+
+    # Apply one-hot encoding to the user's input
+    input_df_encoded = pd.get_dummies(input_df, columns=categorical_features, drop_first=True)
+    
+    # Align the user input columns with the training columns
+    # This ensures the model sees the exact same feature set
+    final_input = pd.DataFrame(columns=X.columns)
+    final_input = final_input.append(input_df_encoded, ignore_index=True, sort=False).fillna(0)
+    
+    # Reorder columns to match the model's training order
+    final_input = final_input[X.columns]
+
+    # Predict the price
+    predicted_price = model.predict(final_input)[0]
+
+    print("\n-----------------------------------------")
+    print(f"Predicted Selling Price: ${predicted_price:,.2f}")
+    print("-----------------------------------------")
+
+except ValueError:
+    print("\nError: Please enter valid numerical values for year, milage, and horsepower.")
+except Exception as e:
+    print(f"\nAn unexpected error occurred: {e}")
