@@ -3,7 +3,7 @@ import numpy as np
 from sklearn.metrics import confusion_matrix, classification_report
 
 # Load dataset
-data = pd.read_csv(r"C:\Users\Shiva sAI\OneDrive\Documents\ML\WA_Fn-UseC_-Telco-Customer-Churn.csv")
+data = pd.read_csv(r"#file location.csv")
 
 # Select initial binary columns and add new binary features
 binary_columns = ['SeniorCitizen', 'PaperlessBilling', 'MonthToMonth', 'HasFiberOptic']
