@@ -1,0 +1,45 @@
+import pandas as pd
+import numpy as np
+from sklearn.metrics import confusion_matrix, classification_report
+
+# Load dataset
+data = pd.read_csv(r"C:\Users\Shiva sAI\OneDrive\Documents\ML\WA_Fn-UseC_-Telco-Customer-Churn.csv")
+
+# Select initial binary columns and add new binary features
+binary_columns = ['SeniorCitizen', 'PaperlessBilling', 'MonthToMonth', 'HasFiberOptic']
+data['MonthToMonth'] = data['Contract'].apply(lambda x: 1 if x == 'Month-to-month' else 0)
+data['HasFiberOptic'] = data['InternetService'].apply(lambda x: 1 if x == 'Fiber optic' else 0)
+data = data[binary_columns + ['Churn']].dropna()
+
+# Convert Yes/No to 0/1
+for col in ['PaperlessBilling']:
+    data[col] = data[col].apply(lambda x: 1 if x == 'Yes' else 0)
+
+# Encode target
+data['Churn'] = data['Churn'].apply(lambda x: 1 if x == 'Yes' else 0)
+
+# Inputs and outputs
+X = data[binary_columns].values
+y_true = data['Churn'].values
+
+# MP Neuron Implementation
+def mp_neuron(inputs, weights, threshold):
+    summation = np.dot(inputs, weights)
+    return 1 if summation >= threshold else 0
+
+# Test weights and threshold
+weights = [1, 1, -1, -1]  # Adjusted weights: positive for features correlated with churn
+threshold = 3  # Adjusted threshold
+
+# Predict
+predictions = [mp_neuron(x, weights, threshold) for x in X]
+
+# Evaluate accuracy
+accuracy = np.mean(predictions == y_true)
+print(f"Accuracy with columns {binary_columns}: {accuracy * 100:.2f}%")
+
+# Confusion matrix and classification report
+print("Confusion Matrix:")
+print(confusion_matrix(y_true,predictions))
+print("\nClassification Report:")
+print(classification_report(y_true,predictions))
