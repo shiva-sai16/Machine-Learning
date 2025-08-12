@@ -7,7 +7,7 @@ from sklearn.ensemble import RandomForestRegressor
 # --- Part 1: Data Processing and Model Training ---
 
 # Load and clean the dataset
-data = pd.read_csv(r"C:\Users\Shiva sAI\OneDrive\Documents\ML\CARSELLINGPRICE.csv")
+data = pd.read_csv(r"#file location.csv")
 
 # Clean numerical columns
 data['price'] = data['price'].replace({'\$': '', ',': ''}, regex=True).astype(float)
