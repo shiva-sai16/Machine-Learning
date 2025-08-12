@@ -1,0 +1,80 @@
+import pandas as pd
+import numpy as np
+
+# Load dataset and correct the file path
+try:
+    data = pd.read_csv("C:\Users\Shiva sAI\OneDrive\Documents\ML\food_disease_dataset")
+except FileNotFoundError:
+    print("Error: The CSV file was not found. Please check the path.")
+    exit()
+
+# Separate attributes and target
+attributes = data.columns[:-1]
+target = data.columns[-1]
+
+X = data[attributes].values
+y = data[target].values
+
+def candidate_elimination(X, y, attributes):
+    """
+    Implements the Candidate-Elimination algorithm.
+    """
+    n_features = X.shape[1]
+    
+    # Initialize S with the first positive example
+    first_positive_idx = np.where(y == 'Positive')[0][0]
+    S = X[first_positive_idx].copy()
+    
+    # Initialize G to the most general hypothesis
+    G = [['?' for _ in range(n_features)]]
+
+    # Iterate through each training instance
+    for i, instance in enumerate(X):
+        # --- Handle POSITIVE examples ---
+        if y[i] == 'Positive':
+            # Remove any hypothesis in G that does not cover the positive example
+            G = [g for g in G if all(h == '?' or h == val for h, val in zip(g, instance))]
+            
+            # Generalize S to cover the positive example
+            for j in range(n_features):
+                if S[j] != instance[j]:
+                    S[j] = '?'
+        
+        # --- Handle NEGATIVE examples ---
+        elif y[i] == 'Negative':
+            new_G = []
+            for g in G:
+                # If a general hypothesis covers the negative example, it needs to be specialized
+                if all(h == '?' or h == val for h, val in zip(g, instance)):
+                    for j in range(n_features):
+                        # Specialize by adding constraints
+                        if g[j] == '?':
+                            new_hypothesis = g.copy()
+                            new_hypothesis[j] = S[j] # Use a value from S to constrain
+                            
+                            # Add the new specialized hypothesis to the new_G set
+                            # if it's more general than S
+                            if any(S[k] != '?' and S[k] != new_hypothesis[k] for k in range(n_features)):
+                                new_G.append(new_hypothesis)
+                else:
+                    # If g does not cover the negative example, keep it
+                    new_G.append(g)
+            
+            G = new_G
+            
+            # Remove any hypothesis from G that is not more general than S
+            G = [g for g in G if any(g[k] == '?' and S[k] != '?' for k in range(n_features))]
+            # Remove duplicates from G
+            G = [list(x) for x in set(tuple(x) for x in G)]
+            
+    return S, G
+
+# Run the algorithm
+final_S, final_G = candidate_elimination(X, y, attributes)
+
+# Output the final version space
+print("Final Specific Hypothesis (S):")
+print(final_S)
+print("\nFinal General Hypotheses (G):")
+for g in final_G:
+    print(g)
