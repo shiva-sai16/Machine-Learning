@@ -2,7 +2,7 @@ import pandas as pd
 
 # Load dataset
 # Make sure the file path is correct for your system
-data = pd.read_csv(r"C:\Users\Shiva sAI\OneDrive\Documents\ML\PROJECT 2 Disease_symptom_and_patient_profile_dataset.csv")
+data = pd.read_csv(r"#File location.csv")
 
 # Display the dataset's columns to confirm
 print("Dataset Columns:\n", data.columns.tolist())
