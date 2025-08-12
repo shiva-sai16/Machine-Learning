@@ -3,7 +3,7 @@ import numpy as np
 
 # Load dataset and correct the file path
 try:
-    data = pd.read_csv("C:\Users\Shiva sAI\OneDrive\Documents\ML\food_disease_dataset")
+    data = pd.read_csv("#File location")
 except FileNotFoundError:
     print("Error: The CSV file was not found. Please check the path.")
     exit()
